@@ -8,6 +8,7 @@ import { DonationsModule } from "./donations/donations.module";
 import { StreamsModule } from "./streams/streams.module";
 import { UsersModule } from "./users/users.module";
 import { VodsModule } from "./vods/vods.module";
+import { AdminModule } from "./admin/admin.module";
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { VodsModule } from "./vods/vods.module";
     DonationsModule,
     StreamsModule,
     UsersModule,
+    AdminModule,
     VodsModule,
   ],
   controllers: [AppController],

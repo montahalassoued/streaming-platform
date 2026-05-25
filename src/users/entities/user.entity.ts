@@ -20,6 +20,9 @@ export class UserEntity {
   @Column({ name: "password_hash", type: "varchar" })
   passwordHash!: string;
 
+  @Column({ name: "is_admin", type: "boolean", default: false })
+  isAdmin!: boolean;
+
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt!: Date;
 
