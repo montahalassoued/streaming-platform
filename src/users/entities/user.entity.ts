@@ -1,0 +1,28 @@
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  UpdateDateColumn,
+  PrimaryGeneratedColumn,
+} from "typeorm";
+
+@Entity({ name: "users" })
+export class UserEntity {
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
+
+  @Column({ type: "varchar" })
+  username!: string;
+
+  @Column({ type: "varchar" })
+  email!: string;
+
+  @Column({ name: "password_hash", type: "varchar" })
+  passwordHash!: string;
+
+  @CreateDateColumn({ name: "created_at", type: "timestamp" })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ name: "updated_at", type: "timestamp", nullable: true })
+  updatedAt?: Date | null;
+}
