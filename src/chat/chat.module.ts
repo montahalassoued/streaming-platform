@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ChatController } from "./chat.controller";
+import { ChatDocsController } from "./chat.docs.controller";
 import { ChatService } from "./chat.service";
 import { ChatGateway } from "./chat.gateway";
 import { ChatMessageEntity } from "./entities/chat-message.entity";
@@ -13,7 +14,7 @@ import { StreamsModule } from "../streams/streams.module";
     RedisModule,
     StreamsModule,
   ],
-  controllers: [ChatController],
+  controllers: [ChatController, ChatDocsController],
   providers: [ChatService, ChatGateway],
   exports: [ChatService],
 })
