@@ -8,7 +8,8 @@ import {
   Post,
 } from "@nestjs/common";
 import { DonationsService } from "./donations.service";
-import { CreateDonationDto, UpdateDonationDto } from "./donations.dto";
+import { CreateDonationDto } from "./dto/create-donation.dto";
+import { UpdateDonationDto } from "./dto/update-donation.dto";
 
 @Controller("donations")
 export class DonationsController {

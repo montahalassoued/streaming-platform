@@ -8,7 +8,8 @@ import {
   Post,
 } from "@nestjs/common";
 import { StreamsService } from "./streams.service";
-import { CreateStreamDto, UpdateStreamDto } from "./streams.dto";
+import { CreateStreamDto } from "./dto/create-stream.dto";
+import { UpdateStreamDto } from "./dto/update-stream.dto";
 
 @Controller("streams")
 export class StreamsController {

@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { CreateVodDto, UpdateVodDto } from "./vods.dto";
+import { CreateVodDto } from "./dto/create-vod.dto";
+import { UpdateVodDto } from "./dto/update-vod.dto";
 
 @Injectable()
 export class VodsService {

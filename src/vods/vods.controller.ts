@@ -8,7 +8,8 @@ import {
   Post,
 } from "@nestjs/common";
 import { VodsService } from "./vods.service";
-import { CreateVodDto, UpdateVodDto } from "./vods.dto";
+import { CreateVodDto } from "./dto/create-vod.dto";
+import { UpdateVodDto } from "./dto/update-vod.dto";
 
 @Controller("vods")
 export class VodsController {

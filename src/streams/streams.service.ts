@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { CreateStreamDto, UpdateStreamDto } from "./streams.dto";
+import { CreateStreamDto } from "./dto/create-stream.dto";
+import { UpdateStreamDto } from "./dto/update-stream.dto";
 
 @Injectable()
 export class StreamsService {

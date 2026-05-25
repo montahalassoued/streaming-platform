@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { CreateDonationDto, UpdateDonationDto } from "./donations.dto";
+import { CreateDonationDto } from "./dto/create-donation.dto";
+import { UpdateDonationDto } from "./dto/update-donation.dto";
 
 @Injectable()
 export class DonationsService {

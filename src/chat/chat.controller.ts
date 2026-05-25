@@ -8,7 +8,8 @@ import {
   Post,
 } from "@nestjs/common";
 import { ChatService } from "./chat.service";
-import { CreateChatMessageDto, UpdateChatMessageDto } from "./chat.dto";
+import { CreateChatMessageDto } from "./dto/create-chat-message.dto";
+import { UpdateChatMessageDto } from "./dto/update-chat-message.dto";
 
 @Controller("chat")
 export class ChatController {
