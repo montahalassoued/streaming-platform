@@ -81,27 +81,6 @@ The app will be available at `http://localhost:3000` and will use the `DATABASE_
 
 You can override the runtime with environment variables such as `DATABASE_URL`, `JWT_SECRET`, and `PORT`.
 
-## Running With A Teammate
-
-If your friend wants the same database and schema:
-
-1. Give them the same `DATABASE_URL` from your Neon project if you want shared data.
-2. Have them create their own `.env` file with that `DATABASE_URL` and the same `JWT_SECRET` if needed.
-3. Run migrations on that same Neon database so both machines use the same schema.
-4. Start the app normally with `npm run start:dev` or `docker compose up --build`.
-
-If you want separate data, create a separate Neon branch or project and give them that connection string instead.
-
-## Why Docker Helps Here
-
-Docker is for the app runtime, not the database. In this project it helps by:
-
-- keeping the NestJS environment identical on every machine
-- avoiding local Node/Nest installation differences
-- making it easy to run the backend with one command
-- still letting the app connect to Neon through `DATABASE_URL`
-
-So your teammate still needs access to a Neon connection string, but Docker makes the backend itself portable.
 
 ## Project Structure
 
