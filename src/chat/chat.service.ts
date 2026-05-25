@@ -1,33 +1,45 @@
 import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 import { CreateChatMessageDto } from "./dto/create-chat-message.dto";
 import { UpdateChatMessageDto } from "./dto/update-chat-message.dto";
+import { ChatMessageEntity } from "./entities/chat-message.entity";
 
 @Injectable()
 export class ChatService {
+  constructor(
+    @InjectRepository(ChatMessageEntity)
+    private readonly chatRepository: Repository<ChatMessageEntity>,
+  ) {}
+
   findAll() {
-    return [{ message: "Chat messages list placeholder" }];
+    return this.chatRepository.find();
   }
 
   findOne(id: string) {
-    return { message: "Chat message detail placeholder", id };
+    return this.chatRepository.findOneBy({ id });
+  }
+
+  findByStreamId(streamId: string) {
+    return this.chatRepository.findBy({ streamId });
   }
 
   create(createChatMessageDto: CreateChatMessageDto) {
-    return {
-      message: "Chat message created placeholder",
-      data: createChatMessageDto,
-    };
+    const message = this.chatRepository.create({
+      streamId: createChatMessageDto.streamId,
+      userId: createChatMessageDto.userId,
+      content: createChatMessageDto.content,
+      isDeleted: createChatMessageDto.isDeleted ?? false,
+    });
+
+    return this.chatRepository.save(message);
   }
 
   update(id: string, updateChatMessageDto: UpdateChatMessageDto) {
-    return {
-      message: "Chat message updated placeholder",
-      id,
-      data: updateChatMessageDto,
-    };
+    return this.chatRepository.update(id, updateChatMessageDto);
   }
 
   remove(id: string) {
-    return { message: "Chat message removed placeholder", id };
+    return this.chatRepository.delete(id);
   }
 }

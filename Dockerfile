@@ -18,4 +18,4 @@ RUN npm install --omit=dev --legacy-peer-deps
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/assets ./assets
 EXPOSE 3000
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/main.ts"]

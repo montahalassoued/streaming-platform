@@ -9,6 +9,7 @@ import {
 export class StreamSubscriptionEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
+  
 
   @Column({ name: "user_id", type: "uuid" })
   userId!: string;

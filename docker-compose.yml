@@ -1,4 +1,11 @@
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: streaming-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
   app:
     build:
       context: .
@@ -10,6 +17,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: ${PORT:-3000}
+      REDIS_URL: redis://redis:6379
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
+    depends_on:
+      - redis
     command: ["node", "dist/main.js"]
