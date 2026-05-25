@@ -19,7 +19,7 @@ NestJS backend for a streaming platform with TypeORM, PostgreSQL, auth, admin, s
 
 - Node.js 18+
 - npm
-- PostgreSQL database
+- Neon PostgreSQL database
 
 ## Setup
 
@@ -29,15 +29,15 @@ NestJS backend for a streaming platform with TypeORM, PostgreSQL, auth, admin, s
 npm install
 ```
 
-2. Create a `.env` file with your database and auth values:
+2. Create a `.env` file with your Neon database and auth values:
 
 ````
 
-3. Run the database sync or migration flow you want:
+3. Run the build or start command you want:
 
 ```bash
 npm run build
-````
+```
 
 4. Start the app:
 
@@ -64,6 +64,18 @@ After starting the server, open:
 ```text
 http://localhost:3000/api
 ```
+
+## Docker
+
+Build and run the API against Neon:
+
+```bash
+docker compose up --build
+```
+
+The app will be available at `http://localhost:3000` and will use the `DATABASE_URL` from your `.env` file.
+
+You can override the runtime with environment variables such as `DATABASE_URL`, `JWT_SECRET`, and `PORT`.
 
 ## Project Structure
 
