@@ -1,6 +1,6 @@
 import dataSource from "../data-source";
 import { UserEntity } from "../users/entities/user.entity";
-import { StreamerEntity } from "../users/entities/streamer.entity";
+import { StreamerEntity } from "../streamer/entities/streamer.entity";
 import { CategoryEntity } from "../categories/entities/category.entity";
 import { SubscriptionTierEntity } from "../subscription-tiers/entities/subscription-tier.entity";
 import { StreamEntity } from "../streams/entities/stream.entity";

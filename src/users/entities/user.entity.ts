@@ -17,6 +17,9 @@ export class UserEntity {
   @Column({ type: "varchar" })
   email!: string;
 
+  @Column({ type: "varchar", nullable: true })
+  name?: string;
+
   @Column({ name: "password_hash", type: "varchar" })
   passwordHash!: string;
 

@@ -11,9 +11,11 @@ export class AdminService {
   }
 
   setAdmin(id: string, isAdmin: boolean) {
-    const user = this.usersService.findOne(id);
-    if (!user) throw new NotFoundException("User not found");
-    const update: UpdateUserDto = { isAdmin };
-    return this.usersService.update(id, update);
+    return (async () => {
+      const user = await this.usersService.findOne(id);
+      if (!user) throw new NotFoundException("User not found");
+      const update: UpdateUserDto = { isAdmin };
+      return this.usersService.update(id, update);
+    })();
   }
 }

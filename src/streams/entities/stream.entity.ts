@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { CategoryEntity } from "../../categories/entities/category.entity";
-import { StreamerEntity } from "../../users/entities/streamer.entity";
+import { StreamerEntity } from "../../streamer/entities/streamer.entity";
 
 @Entity({ name: "streams" })
 export class StreamEntity {
