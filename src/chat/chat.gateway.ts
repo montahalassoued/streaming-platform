@@ -34,6 +34,34 @@ export class ChatGateway
 
   afterInit() {
     this.logger.log("Chat websocket gateway initialized");
+
+    // subscribe to Redis channel for system chat messages
+    if (this.redisService.isEnabled) {
+      void this.redisService.subscribe("chat.system.message", (payload) => {
+        try {
+          const room = this.getRoomName(payload.streamId);
+          if (this.server) {
+            // broadcast as a newMessage to match existing events
+            this.server.to(room).emit("newMessage", {
+              message: {
+                id: `sys-${payload.streamId}-${payload.timestamp ?? "0"}`,
+                streamId: payload.streamId,
+                userId: null,
+                content: payload.content,
+                isDeleted: false,
+                createdAt: payload.timestamp ?? new Date().toISOString(),
+              },
+              user: { id: null, username: "System" },
+            });
+          }
+        } catch (err) {
+          this.logger.error(
+            "Error broadcasting system chat message",
+            err as any,
+          );
+        }
+      });
+    }
   }
 
   handleConnection(client: Socket) {

@@ -10,6 +10,8 @@ import { createClient, RedisClientType } from "redis";
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
   private client?: RedisClientType;
+  private subscriber?: RedisClientType;
+  private subscriptions = new Map<string, Set<(payload: any) => void>>();
 
   get isEnabled() {
     return Boolean(this.client);
@@ -25,6 +27,13 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     this.client = createClient({ url });
     await this.client.connect();
     this.logger.log("Redis connected");
+
+    // create a dedicated subscriber client for pub/sub
+    this.subscriber = createClient({ url });
+    this.subscriber.on("error", (err) =>
+      this.logger.error("Redis subscriber error", err),
+    );
+    await this.subscriber.connect();
   }
 
   async onModuleDestroy() {
@@ -70,6 +79,49 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
 
     await this.client.set(key, JSON.stringify(value));
+  }
+
+  async publish(channel: string, payload: unknown) {
+    if (!this.client) return;
+    try {
+      await this.client.publish(channel, JSON.stringify(payload));
+    } catch (err) {
+      this.logger.error("Failed to publish to Redis", err as any);
+    }
+  }
+
+  async subscribe(channel: string, handler: (payload: any) => void) {
+    if (!this.subscriber) return;
+
+    let handlers = this.subscriptions.get(channel);
+    if (!handlers) {
+      handlers = new Set();
+      this.subscriptions.set(channel, handlers);
+
+      // subscribe once and dispatch to registered handlers
+      await this.subscriber.subscribe(channel, (message) => {
+        try {
+          const data = JSON.parse(message);
+          const set = this.subscriptions.get(channel);
+          if (set) {
+            for (const h of set) {
+              try {
+                h(data);
+              } catch (err) {
+                this.logger.error(
+                  "Redis subscription handler error",
+                  err as any,
+                );
+              }
+            }
+          }
+        } catch (err) {
+          this.logger.error("Failed to parse Redis message", err as any);
+        }
+      });
+    }
+
+    handlers.add(handler);
   }
 
   async getJson<T>(key: string): Promise<T | null> {

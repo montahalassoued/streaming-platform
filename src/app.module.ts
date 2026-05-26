@@ -14,6 +14,7 @@ import { VodsModule } from "./vods/vods.module";
 import { AdminModule } from "./admin/admin.module";
 import { SubscriptionTiersModule } from "./subscription-tiers/subscription-tiers.module";
 import { RedisModule } from "./redis/redis.module";
+import { NotificationsModule } from "./notifications/notifications.module";
 
 const bullImports = process.env.REDIS_URL
   ? [
@@ -36,6 +37,7 @@ const bullImports = process.env.REDIS_URL
     CategoriesModule,
     ChatModule,
     DonationsModule,
+    NotificationsModule,
     StreamsModule,
     UsersModule,
     SubscriptionTiersModule,
