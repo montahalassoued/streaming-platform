@@ -11,12 +11,8 @@ import {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([
-        (req: RequestWithCookies) => {
-          return req?.cookies?.access_token ?? null;
-        },
-        ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ]),
+      // Only accept JWTs from the Authorization: Bearer <token> header for stricter SSE usage
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_SECRET ?? "dev-secret",
     });

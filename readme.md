@@ -81,7 +81,6 @@ The app will be available at `http://localhost:3000` and will use the `DATABASE_
 
 You can override the runtime with environment variables such as `DATABASE_URL`, `JWT_SECRET`, and `PORT`.
 
-
 ## Project Structure
 
 - `src/auth` - authentication controllers, services, strategies, and DTOs
@@ -94,3 +93,24 @@ You can override the runtime with environment variables such as `DATABASE_URL`, 
 - `src/admin` - admin utilities
 - `src/migrations` - TypeORM migrations
 - `src/scripts` - sync and seed scripts
+
+## Realtime Architecture
+
+This backend uses a hybrid realtime architecture:
+
+- Redis Pub/Sub: cross-module system events (channels: `chat.system.message`, `stream.went.live`).
+- WebSocket (Socket.IO): room-based chat under namespace `/chat`, rooms named `stream:{streamId}`.
+- Server-Sent Events (SSE): per-user notifications at `GET /notifications/sse` (authenticated via JWT).
+
+Key notes:
+
+- Modules are decoupled using Redis pub/sub to avoid circular NestJS DI.
+- Follower notifications are stored in the `follows` table and SSE pushes are filtered to followers only.
+
+## Notifications & Events
+
+See `docs/NOTIFICATIONS.md` for event payload schemas and examples for subscribing via SSE and connecting to WebSocket chat.
+
+## Architecture Diagram
+
+See `docs/ARCHITECTURE.md` for a brief diagram and explanation of the realtime flow.

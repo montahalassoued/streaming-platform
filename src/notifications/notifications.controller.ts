@@ -1,18 +1,19 @@
-import { Controller, Get, Query, Req, Res } from "@nestjs/common";
+import { Controller, Get, Req, Res, UseGuards, UnauthorizedException } from "@nestjs/common";
 import { NotificationsService } from "./notifications.service";
 import { Request, Response } from "express";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RequestWithUser } from "../common/types/auth.types";
 
 @Controller("notifications")
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Get("sse")
-  subscribe(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Query("userId") userId?: string,
-  ) {
-    const id = userId ?? (req.headers["x-user-id"] as string) ?? "anonymous";
+  subscribe(@Req() req: Request & RequestWithUser, @Res() res: Response) {
+    const user = req.user;
+    if (!user) throw new UnauthorizedException();
+    const id = user.id;
 
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
