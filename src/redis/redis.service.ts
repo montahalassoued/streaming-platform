@@ -38,6 +38,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleDestroy() {
     await this.client?.quit().catch(() => undefined);
+    await this.subscriber?.quit().catch(() => undefined);
   }
 
   async incrementViewerCount(streamId: string) {
@@ -90,8 +91,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async subscribe(channel: string, handler: (payload: any) => void) {
-    if (!this.subscriber) return;
+  async subscribe(
+    channel: string,
+    handler: (payload: any) => void,
+  ): Promise<() => void> {
+    if (!this.subscriber) return () => {};
 
     let handlers = this.subscriptions.get(channel);
     if (!handlers) {
@@ -101,7 +105,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       // subscribe once and dispatch to registered handlers
       await this.subscriber.subscribe(channel, (message) => {
         try {
-          const data = JSON.parse(message);
+          const data = JSON.parse(message as string);
           const set = this.subscriptions.get(channel);
           if (set) {
             for (const h of set) {
@@ -122,6 +126,16 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
 
     handlers.add(handler);
+
+    return () => {
+      const set = this.subscriptions.get(channel);
+      if (!set) return;
+      set.delete(handler);
+      if (set.size === 0) {
+        this.subscriptions.delete(channel);
+        void this.subscriber?.unsubscribe(channel).catch(() => undefined);
+      }
+    };
   }
 
   async getJson<T>(key: string): Promise<T | null> {

@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { EventEmitter } from "events";
 import { CreateChatMessageDto } from "./dto/create-chat-message.dto";
 import { UpdateChatMessageDto } from "./dto/update-chat-message.dto";
 import { ChatMessageEntity } from "./entities/chat-message.entity";
@@ -25,9 +24,6 @@ export class ChatService {
     return this.chatRepository.findBy({ streamId });
   }
 
-  // Event emitter for broadcasting created messages within the process
-  static eventEmitter = new EventEmitter();
-
   async create(createChatMessageDto: CreateChatMessageDto) {
     const message = this.chatRepository.create({
       streamId: createChatMessageDto.streamId,
@@ -37,13 +33,6 @@ export class ChatService {
     });
 
     const saved = await this.chatRepository.save(message);
-
-    // emit an in-process event so listeners (e.g. websocket gateway) can broadcast
-    ChatService.eventEmitter.emit("messageCreated", {
-      message: saved,
-      user: { id: saved.userId, username: null },
-    });
-
     return saved;
   }
 
