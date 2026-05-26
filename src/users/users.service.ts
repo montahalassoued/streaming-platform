@@ -15,21 +15,13 @@ export class UsersService {
     @InjectRepository(UserEntity)
     private readonly usersRepo: Repository<UserEntity>,
     @InjectRepository(FollowEntity)
-    private readonly followRepo: Repository<
-      import("../follows/entities/follow.entity").FollowEntity
-    >,
+    private readonly followRepo: Repository<FollowEntity>,
     @InjectRepository(DonationEntity)
-    private readonly donationRepo: Repository<
-      import("../donations/entities/donation.entity").DonationEntity
-    >,
+    private readonly donationRepo: Repository<DonationEntity>,
     @InjectRepository(StreamSubscriptionEntity)
-    private readonly subscriptionRepo: Repository<
-      import("../streams/entities/stream-subscription.entity").StreamSubscriptionEntity
-    >,
+    private readonly subscriptionRepo: Repository<StreamSubscriptionEntity>,
     @InjectRepository(SubscriptionTierEntity)
-    private readonly tierRepo: Repository<
-      import("../subscription-tiers/entities/subscription-tier.entity").SubscriptionTierEntity
-    >,
+    private readonly tierRepo: Repository<SubscriptionTierEntity>,
   ) {}
 
   async findAll() {
@@ -106,11 +98,7 @@ export class UsersService {
   }
 
   /* Donations */
-  async giveDonation(
-    createDonationDto: Partial<
-      import("../donations/entities/donation.entity").DonationEntity
-    >,
-  ) {
+  async giveDonation(createDonationDto: Partial<DonationEntity>) {
     const donation = this.donationRepo.create({
       streamId: createDonationDto.streamId!,
       userId: createDonationDto.userId!,

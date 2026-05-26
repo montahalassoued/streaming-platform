@@ -25,6 +25,9 @@ export class DonationEntity {
   @Column({ type: "text", nullable: true })
   message?: string | null;
 
+  @Column({ name: "provider_payment_id", type: "varchar", nullable: true })
+  providerPaymentId?: string | null;
+
   @Column({ type: "varchar" })
   status!: string;
 
