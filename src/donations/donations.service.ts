@@ -1,4 +1,3 @@
-@Injectable()
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -50,8 +49,10 @@ export class DonationsService {
     const donation = await this.donationRepo.findOneBy({ id });
     if (!donation) return null;
 
-    if (updateDonationDto.status !== undefined) donation.status = updateDonationDto.status;
-    if (updateDonationDto.message !== undefined) donation.message = updateDonationDto.message;
+    if (updateDonationDto.status !== undefined)
+      donation.status = updateDonationDto.status;
+    if (updateDonationDto.message !== undefined)
+      donation.message = updateDonationDto.message;
 
     return this.donationRepo.save(donation);
   }
