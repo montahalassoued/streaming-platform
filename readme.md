@@ -114,3 +114,13 @@ See `docs/NOTIFICATIONS.md` for event payload schemas and examples for subscribi
 ## Architecture Diagram
 
 See `docs/ARCHITECTURE.md` for a brief diagram and explanation of the realtime flow.
+
+## Frontend Integration
+
+| Document | Purpose |
+|----------|---------|
+| `docs/API_CONTRACTS.md` | Every endpoint: method, path, auth, request body, response shape, Socket.IO events, SSE events |
+| `docs/FRONTEND_HANDOFF.md` | Base URL, auth flow, token refresh, error format, realtime setup, donation flow |
+| `docs/UI_STATES.md` | Per-screen data requirements and state breakdown (loading, empty, error, auth-gated) |
+| `docs/FRONTEND_GAPS.md` | Known backend limitations that block or constrain frontend screens |
+| `docs/FRONTEND_TODO.md` | Ordered frontend build checklist with backend dependency status per screen |
