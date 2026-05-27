@@ -429,9 +429,9 @@ async function run() {
     // Views
     await findOrCreate(
       vodViewRepo,
-      { streamId: aliceStream.id, userId: bob.id },
+      { vodId: aliceVod.id, userId: bob.id },
       {
-        streamId: aliceStream.id,
+        vodId: aliceVod.id,
         userId: bob.id,
         watchDurationSeconds: 120,
         watchedAt: new Date(),

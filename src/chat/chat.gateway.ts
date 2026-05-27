@@ -9,6 +9,7 @@ import {
   WebSocketServer,
 } from "@nestjs/websockets";
 import { Logger } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
 import { RedisService } from "../redis/redis.service";
 import { StreamsService } from "../streams/streams.service";
 import { Server, Socket } from "socket.io";
@@ -30,18 +31,45 @@ export class ChatGateway
     private readonly chatService: ChatService,
     private readonly streamsService: StreamsService,
     private readonly redisService: RedisService,
+    private readonly jwtService: JwtService,
   ) {}
 
-  afterInit() {
+  afterInit(server: Server) {
     this.logger.log("Chat websocket gateway initialized");
 
-    // subscribe to Redis channel for system chat messages
+    // Reject unauthenticated connections at the handshake level so the client
+    // never receives a `connect` event — only a `connect_error`.
+    server.use((socket, next) => {
+      const token =
+        (socket.handshake.auth?.token as string | undefined) ??
+        (socket.handshake.headers?.authorization as string | undefined)?.replace(
+          /^Bearer /i,
+          "",
+        );
+
+      if (!token) {
+        return next(new Error("Unauthorized"));
+      }
+
+      try {
+        const payload = this.jwtService.verify<{
+          sub: string;
+          username?: string;
+          isAdmin?: boolean;
+        }>(token, { secret: process.env.JWT_SECRET ?? "dev-secret" });
+        socket.data.userId = payload.sub;
+        socket.data.username = payload.username ?? null;
+        next();
+      } catch {
+        next(new Error("Unauthorized"));
+      }
+    });
+
     if (this.redisService.isEnabled) {
       void this.redisService.subscribe("chat.system.message", (payload) => {
         try {
           const room = this.getRoomName(payload.streamId);
           if (this.server) {
-            // broadcast as a newMessage to match existing events
             this.server.to(room).emit("newMessage", {
               message: {
                 id: `sys-${payload.streamId}-${payload.timestamp ?? "0"}`,
@@ -61,11 +89,61 @@ export class ChatGateway
           );
         }
       });
+
+      // Wire chat.message.deleted: broadcast messageDeleted to the stream room
+      // so connected clients can immediately hide soft-deleted messages.
+      void this.redisService.subscribe(
+        "chat.message.deleted",
+        async (payload) => {
+          try {
+            const messageId = payload?.messageId as string | undefined;
+            if (!messageId) return;
+
+            const message = await this.chatService.findOne(messageId);
+            if (!message) return;
+
+            const room = this.getRoomName(message.streamId);
+            this.server.to(room).emit("messageDeleted", { messageId });
+          } catch (err) {
+            this.logger.error(
+              "Error broadcasting chat.message.deleted",
+              err as any,
+            );
+          }
+        },
+      );
     }
   }
 
   handleConnection(client: Socket) {
-    this.logger.log(`Client connected: ${client.id}`);
+    const token =
+      (client.handshake.auth?.token as string | undefined) ??
+      (client.handshake.headers?.authorization as string | undefined)?.replace(
+        /^Bearer /i,
+        "",
+      );
+
+    if (!token) {
+      this.logger.warn(`Connection rejected (no token): ${client.id}`);
+      client.disconnect();
+      return;
+    }
+
+    try {
+      const payload = this.jwtService.verify<{
+        sub: string;
+        username?: string;
+        isAdmin?: boolean;
+      }>(token, { secret: process.env.JWT_SECRET ?? "dev-secret" });
+      client.data.userId = payload.sub;
+      client.data.username = payload.username ?? null;
+      this.logger.log(
+        `Client connected: ${client.id} (user ${payload.sub})`,
+      );
+    } catch {
+      this.logger.warn(`Connection rejected (invalid token): ${client.id}`);
+      client.disconnect();
+    }
   }
 
   handleDisconnect(client: Socket) {
@@ -86,8 +164,6 @@ export class ChatGateway
     const room = this.getRoomName(payload.streamId);
     client.join(room);
     client.data.streamId = payload.streamId;
-    client.data.userId = payload.userId ?? client.data.userId;
-    client.data.username = payload.username ?? client.data.username ?? null;
 
     const messages = this.chatService.findByStreamId(payload.streamId);
     const viewerCount = this.redisService.incrementViewerCount(
@@ -101,8 +177,8 @@ export class ChatGateway
 
     client.to(room).emit("userJoined", {
       streamId: payload.streamId,
-      userId: client.data.userId ?? payload.userId ?? null,
-      username: client.data.username ?? payload.username ?? null,
+      userId: client.data.userId ?? null,
+      username: client.data.username ?? null,
     });
 
     void viewerCount.then((count) => {
@@ -132,7 +208,7 @@ export class ChatGateway
 
     client.to(room).emit("userLeft", {
       streamId: payload.streamId,
-      userId: payload.userId ?? client.data.userId ?? null,
+      userId: client.data.userId ?? null,
       username: client.data.username ?? null,
     });
 
@@ -140,20 +216,19 @@ export class ChatGateway
   }
 
   @SubscribeMessage("sendMessage")
-  handleMessage(
+  async handleMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: SendChatMessageDto,
   ) {
     const room = this.getRoomName(payload.streamId);
-    const userId = payload.userId ?? client.data.userId;
-    const username = client.data.username ?? null;
+    const userId = client.data.userId as string | undefined;
 
     if (!userId) {
       client.emit("chat:error", { message: "User identity is required" });
       return { ok: false };
     }
 
-    const message = this.chatService.create({
+    const message = await this.chatService.create({
       streamId: payload.streamId,
       userId,
       content: payload.content,
@@ -163,7 +238,7 @@ export class ChatGateway
       message,
       user: {
         id: userId,
-        username,
+        username: client.data.username ?? null,
       },
     });
 

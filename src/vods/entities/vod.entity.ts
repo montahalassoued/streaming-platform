@@ -26,8 +26,8 @@ export class VodEntity {
   @Column({ name: "video_url", type: "varchar" })
   videoUrl!: string;
 
-  @Column({ name: "thumbnail_url", type: "varchar" })
-  thumbnailUrl!: string;
+  @Column({ name: "thumbnail_url", type: "varchar", nullable: true })
+  thumbnailUrl!: string | null;
 
   @Column({ name: "duration_seconds", type: "integer" })
   durationSeconds!: number;

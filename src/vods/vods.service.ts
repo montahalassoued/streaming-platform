@@ -79,4 +79,11 @@ export class VodsService {
     await this.vodRepo.remove(vod);
     return vod;
   }
+
+  findByStreamId(streamId: string) {
+    return this.vodRepo.findOne({
+      where: { streamId },
+      relations: { stream: true },
+    });
+  }
 }

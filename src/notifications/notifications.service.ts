@@ -9,6 +9,7 @@ import { Response } from "express";
 import { Repository } from "typeorm";
 import { RedisService } from "../redis/redis.service";
 import { FollowEntity } from "../follows/entities/follow.entity";
+import { NotificationEvent } from "./dto/notification-event.dto";
 
 interface StreamWentLivePayload {
   streamId: string;
@@ -16,10 +17,14 @@ interface StreamWentLivePayload {
   startedAt: string;
 }
 
+// 25 s keeps connections alive through most proxy/load-balancer idle timeouts.
+const SSE_HEARTBEAT_MS = 25_000;
+
 @Injectable()
 export class NotificationsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(NotificationsService.name);
   private clients = new Map<string, Response>();
+  private heartbeats = new Map<string, ReturnType<typeof setInterval>>();
 
   constructor(
     private readonly redisService: RedisService,
@@ -45,9 +50,7 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
 
           for (const follow of followers) {
             const res = this.clients.get(follow.followerId);
-            if (!res) {
-              continue;
-            }
+            if (!res) continue;
 
             try {
               this.pushToResponse(res, {
@@ -68,6 +71,23 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
           );
         }
       });
+
+      // streamer.settings.updated — intentional no-op.
+      // The payload only carries { streamerId }, which cannot be directly mapped to a
+      // connected SSE client (clients are keyed by userId). Pushing a meaningful update
+      // requires a DB lookup and a defined frontend contract for what UI should refresh.
+      // The consumer is wired so the event is acknowledged; implement the push once the
+      // frontend team specifies the expected reaction.
+      void this.redisService.subscribe(
+        "streamer.settings.updated",
+        (payload) => {
+          this.logger.debug(
+            `streamer.settings.updated received (no-op): streamerId=${String(
+              (payload as { streamerId?: string })?.streamerId ?? "unknown",
+            )}`,
+          );
+        },
+      );
     }
   }
 
@@ -77,23 +97,40 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
         res.end();
       } catch {}
     }
+    for (const timer of this.heartbeats.values()) {
+      clearInterval(timer);
+    }
     this.clients.clear();
+    this.heartbeats.clear();
   }
 
   registerClient(userId: string, res: Response) {
     this.clients.set(userId, res);
+    const timer = setInterval(() => {
+      try {
+        res.write(`: heartbeat\n\n`);
+      } catch {
+        this.unregisterClient(userId);
+      }
+    }, SSE_HEARTBEAT_MS);
+    this.heartbeats.set(userId, timer);
     this.logger.log(`Registered SSE client for user ${userId}`);
   }
 
   unregisterClient(userId: string) {
+    const timer = this.heartbeats.get(userId);
+    if (timer) {
+      clearInterval(timer);
+      this.heartbeats.delete(userId);
+    }
     const res = this.clients.get(userId);
     if (res) {
       try {
         res.end();
       } catch {}
       this.clients.delete(userId);
-      this.logger.log(`Unregistered SSE client for user ${userId}`);
     }
+    this.logger.log(`Unregistered SSE client for user ${userId}`);
   }
 
   pushToUser(userId: string, payload: unknown) {
@@ -108,41 +145,23 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private pushToResponse(
-    res: Response,
-    payload: { event?: string; data: unknown },
-  ) {
-    if (payload.event) {
-      res.write(`event: ${payload.event}\n`);
-    }
+  private pushToResponse(res: Response, payload: NotificationEvent) {
+    res.write(`event: ${payload.event}\n`);
     res.write(`data: ${JSON.stringify(payload.data)}\n\n`);
   }
 
   private parseLivePayload(payload: unknown): StreamWentLivePayload | null {
-    if (!payload || typeof payload !== "object") {
-      return null;
-    }
+    if (!payload || typeof payload !== "object") return null;
 
-    const typedPayload = payload as Partial<StreamWentLivePayload>;
-    if (typeof typedPayload.streamId !== "string") {
-      return null;
-    }
-
-    if (
-      typedPayload.streamerId !== null &&
-      typeof typedPayload.streamerId !== "string"
-    ) {
-      return null;
-    }
-
-    if (typeof typedPayload.startedAt !== "string") {
-      return null;
-    }
+    const p = payload as Partial<StreamWentLivePayload>;
+    if (typeof p.streamId !== "string") return null;
+    if (p.streamerId !== null && typeof p.streamerId !== "string") return null;
+    if (typeof p.startedAt !== "string") return null;
 
     return {
-      streamId: typedPayload.streamId,
-      streamerId: typedPayload.streamerId ?? null,
-      startedAt: typedPayload.startedAt,
+      streamId: p.streamId,
+      streamerId: p.streamerId ?? null,
+      startedAt: p.startedAt,
     };
   }
 }

@@ -16,6 +16,7 @@ import { AdminModule } from "./admin/admin.module";
 import { SubscriptionsModule } from "./subscriptions/subscriptions.module";
 import { RedisModule } from "./redis/redis.module";
 import { NotificationsModule } from "./notifications/notifications.module";
+import { WorkersModule } from "./workers/workers.module";
 
 const bullImports = process.env.REDIS_URL
   ? [
@@ -45,6 +46,7 @@ const bullImports = process.env.REDIS_URL
     SubscriptionsModule,
     AdminModule,
     VodsModule,
+    WorkersModule,
     RedisModule,
   ],
   controllers: [AppController],
