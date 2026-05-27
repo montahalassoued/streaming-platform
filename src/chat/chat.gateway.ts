@@ -73,11 +73,11 @@ export class ChatGateway
   }
 
   @SubscribeMessage("joinStream")
-  handleJoin(
+  async handleJoin(
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: JoinStreamDto,
   ) {
-    const stream = this.streamsService.findOne(payload.streamId);
+    const stream = await this.streamsService.findOne(payload.streamId);
     if (!stream) {
       client.emit("chat:error", { message: "Stream not found" });
       return { ok: false };
