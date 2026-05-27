@@ -23,6 +23,18 @@ export class UserEntity {
   @Column({ name: "password_hash", type: "varchar" })
   passwordHash!: string;
 
+  @Column({ name: "is_email_verified", type: "boolean", default: false })
+  isEmailVerified!: boolean;
+
+  @Column({ name: "email_verified_at", type: "timestamp", nullable: true })
+  emailVerifiedAt?: Date | null;
+
+  @Column({ name: "refresh_token_hash", type: "varchar", nullable: true })
+  refreshTokenHash?: string | null;
+
+  @Column({ name: "refresh_token_expires_at", type: "timestamp", nullable: true })
+  refreshTokenExpiresAt?: Date | null;
+
   @Column({ name: "is_admin", type: "boolean", default: false })
   isAdmin!: boolean;
 
