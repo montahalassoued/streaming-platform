@@ -9,11 +9,11 @@ import {
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
 import { EmailVerificationDto } from "./dto/email-verification.dto";
-import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
 import { ResendEmailVerificationDto } from "./dto/resend-email-verification.dto";
-import { ResetPasswordDto } from "./dto/reset-password.dto";
+import { RequestPasswordResetDto } from "./dto/request-password-reset.dto";
+import { ConfirmPasswordResetDto } from "./dto/confirm-password-reset.dto";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
 import { RequestWithUser } from "../common/types/auth.types";
 
@@ -91,20 +91,22 @@ export class AuthController {
   @Post("forgot-password")
   @HttpCode(200)
   @ApiOperation({ summary: "Forgot password" })
-  @ApiBody({ type: ForgotPasswordDto })
+  @ApiBody({ type: RequestPasswordResetDto })
   @ApiResponse({
     status: 200,
     description:
       "If this email is registered, a password reset email has been sent. Please check your inbox or spam folder.",
   })
-  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
-    return await this.authService.forgotPassword(forgotPasswordDto);
+  async forgotPassword(
+    @Body() requestPasswordResetDto: RequestPasswordResetDto,
+  ) {
+    return await this.authService.forgotPassword(requestPasswordResetDto);
   }
 
   @Post("reset-password")
   @HttpCode(200)
   @ApiOperation({ summary: "Reset password" })
-  @ApiBody({ type: ResetPasswordDto })
+  @ApiBody({ type: ConfirmPasswordResetDto })
   @ApiResponse({
     status: 200,
     description: "Password successfully reset",
@@ -113,8 +115,32 @@ export class AuthController {
     status: 403,
     description: "Invalid or expired reset token",
   })
-  resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    return this.authService.resetPassword(resetPasswordDto);
+  resetPassword(@Body() confirmPasswordResetDto: ConfirmPasswordResetDto) {
+    return this.authService.resetPassword(confirmPasswordResetDto);
+  }
+
+  @Post("refresh")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Refresh access token" })
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        refreshToken: { type: "string", example: "refresh-token-here" },
+      },
+      required: ["refreshToken"],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Access token successfully refreshed",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Invalid refresh token",
+  })
+  refresh(@Body("refreshToken") refreshToken: string) {
+    return this.authService.refresh(refreshToken);
   }
   @Post("logout")
   @HttpCode(200)
