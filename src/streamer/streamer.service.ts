@@ -21,7 +21,6 @@ export class StreamerService {
     @InjectRepository(DonationEntity)
     private readonly donationRepo: Repository<DonationEntity>,
     @InjectRepository(StreamSubscriptionEntity)
-    private readonly subscriptionRepo: Repository<StreamSubscriptionEntity>,
     @InjectRepository(FollowEntity)
     private readonly followRepo: Repository<FollowEntity>,
     @InjectRepository(ChatMessageEntity)

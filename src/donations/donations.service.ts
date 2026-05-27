@@ -76,7 +76,6 @@ export class DonationsService {
     donation.status = status;
     const saved = await this.donationRepo.save(donation);
 
-    // Optionally: emit events, notify streamer, publish to Redis, etc.
 
     return saved;
   }

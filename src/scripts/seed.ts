@@ -6,7 +6,6 @@ import { StreamEntity } from "../streams/entities/stream.entity";
 import { VodEntity } from "../vods/entities/vod.entity";
 import { ChatMessageEntity } from "../chat/entities/chat-message.entity";
 import { DonationEntity } from "../donations/entities/donation.entity";
-import { StreamViewEntity } from "../vods/entities/stream-view.entity";
 import { VodViewEntity } from "../vods/entities/vod-view.entity";
 import * as bcrypt from "bcrypt";
 import { randomUUID } from "node:crypto";
@@ -37,7 +36,6 @@ async function run() {
     const vodRepo = ds.getRepository(VodEntity);
     const chatRepo = ds.getRepository(ChatMessageEntity);
     const donationRepo = ds.getRepository(DonationEntity);
-    const streamViewRepo = ds.getRepository(StreamViewEntity);
     const vodViewRepo = ds.getRepository(VodViewEntity);
 
     // Users
@@ -430,7 +428,7 @@ async function run() {
 
     // Views
     await findOrCreate(
-      streamViewRepo,
+      vodViewRepo,
       { streamId: aliceStream.id, userId: bob.id },
       {
         streamId: aliceStream.id,
