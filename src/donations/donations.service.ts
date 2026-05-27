@@ -80,4 +80,15 @@ export class DonationsService {
 
     return saved;
   }
+  async giveDonation(createDonationDto: Partial<DonationEntity>) {
+    const donation = this.donationRepo.create({
+      streamId: createDonationDto.streamId!,
+      userId: createDonationDto.userId!,
+      amountCents: createDonationDto.amountCents ?? 0,
+      currency: createDonationDto.currency ?? "USD",
+      message: createDonationDto.message ?? null,
+      status: createDonationDto.status ?? "completed",
+    });
+    return this.donationRepo.save(donation);
+  }
 }
