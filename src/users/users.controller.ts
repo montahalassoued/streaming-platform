@@ -6,21 +6,56 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { UpdateProfileDto } from "./dto/update-profile.dto";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { CurrentUser } from "../common/decorators/current-user.decorator";
 
 @Controller("users")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @UseGuards(JwtAuthGuard)
+  @Get("/me")
+  me(@CurrentUser() user: any) {
+    return this.usersService.findByIdOrThrow(user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch("/me")
+  updateMe(@CurrentUser() user: any, @Body() dto: UpdateProfileDto) {
+    return this.usersService.updateProfile(user.id, dto as any);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("/me/become-streamer")
+  becomeStreamer(@CurrentUser() user: any) {
+    return this.usersService.becomeStreamer(user.id);
+  }
+
+  // Public profile by username
+  @Get(":username")
+  profile(@Param("username") username: string) {
+    return this.usersService.getProfile(username);
+  }
+
+  @Get(":username/stats")
+  stats(@Param("username") username: string) {
+    // for now reuse profile which includes followers/following counts
+    return this.usersService.getProfile(username);
+  }
+
+  // Admin / internal endpoints
   @Get()
   findAll() {
     return this.usersService.findAll();
   }
 
-  @Get(":id")
+  @Get("/id/:id")
   findOne(@Param("id") id: string) {
     return this.usersService.findOne(id);
   }
@@ -28,35 +63,6 @@ export class UsersController {
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
-  }
-
-  @Post(":id/follow/:streamerId")
-  follow(@Param("id") id: string, @Param("streamerId") streamerId: string) {
-    return this.usersService.follow(id, streamerId);
-  }
-
-  @Delete(":id/unfollow/:streamerId")
-  unfollow(@Param("id") id: string, @Param("streamerId") streamerId: string) {
-    return this.usersService.unfollow(id, streamerId);
-  }
-
-  @Post(":id/donations")
-  giveDonation(@Param("id") id: string, @Body() body: any) {
-    // ensure the donation is attributed to the path user id
-    const dto = { ...body, userId: id };
-    return this.usersService.giveDonation(dto);
-  }
-
-  @Post(":id/subscribe")
-  subscribe(
-    @Param("id") id: string,
-    @Body() body: { streamerId: string; tierId: string },
-  ) {
-    return this.usersService.subscribeToStreamer(
-      id,
-      body.streamerId,
-      body.tierId,
-    );
   }
 
   @Patch(":id")

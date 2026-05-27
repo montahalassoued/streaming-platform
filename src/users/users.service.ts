@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -7,7 +7,7 @@ import { UserEntity } from "./entities/user.entity";
 import { FollowEntity } from "../follows/entities/follow.entity";
 import { DonationEntity } from "../donations/entities/donation.entity";
 import { StreamSubscriptionEntity } from "../streams/entities/stream-subscription.entity";
-import { SubscriptionTierEntity } from "../subscription-tiers/entities/subscription-tier.entity";
+import { StreamerEntity } from "../streamer/entities/streamer.entity";
 
 @Injectable()
 export class UsersService {
@@ -20,8 +20,8 @@ export class UsersService {
     private readonly donationRepo: Repository<DonationEntity>,
     @InjectRepository(StreamSubscriptionEntity)
     private readonly subscriptionRepo: Repository<StreamSubscriptionEntity>,
-    @InjectRepository(SubscriptionTierEntity)
-    private readonly tierRepo: Repository<SubscriptionTierEntity>,
+    @InjectRepository(StreamerEntity)
+    private readonly streamerRepo: Repository<StreamerEntity>,
   ) {}
 
   async findAll() {
@@ -39,6 +39,58 @@ export class UsersService {
 
   async findByUsername(username: string) {
     return (await this.usersRepo.findOneBy({ username })) ?? null;
+  }
+
+  async findByIdOrThrow(id: string) {
+    const user = await this.usersRepo.findOneBy({ id });
+    if (!user) throw new NotFoundException("User not found");
+    return user;
+  }
+
+  async findByUsernameOrThrow(username: string) {
+    const user = await this.usersRepo.findOneBy({ username });
+    if (!user) throw new NotFoundException("User not found");
+    return user;
+  }
+
+  async getProfile(username: string) {
+    const user = await this.findByUsernameOrThrow(username);
+    const followerCount = await this.followRepo.countBy({
+      streamerId: user.id,
+    });
+    const followingCount = await this.followRepo.countBy({
+      followerId: user.id,
+    });
+    const isStreamer = !!(await this.streamerRepo.findOneBy({ userId: user.id }));
+    return {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      isStreamer,
+      createdAt: user.createdAt,
+      followerCount,
+      followingCount,
+    };
+  }
+
+  async updateProfile(userId: string, partial: { name?: string }) {
+    const user = await this.usersRepo.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException("User not found");
+    if (partial.name !== undefined) user.name = partial.name as any;
+    return this.usersRepo.save(user);
+  }
+
+  async becomeStreamer(userId: string) {
+    const user = await this.usersRepo.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException("User not found");
+    const existing = await this.streamerRepo.findOneBy({ userId });
+    if (!existing) {
+      const s = this.streamerRepo.create({ userId, streamKey: require("crypto").randomBytes(16).toString("hex") } as any);
+      await this.streamerRepo.save(s);
+    }
+    user.isStreamer = true;
+    await this.usersRepo.save(user);
+    return { ok: true };
   }
 
   async create(createUserDto: CreateUserDto) {
@@ -74,60 +126,5 @@ export class UsersService {
     if (!user) return null;
     await this.usersRepo.remove(user);
     return user;
-  }
-
-  /* Follow / Unfollow */
-  async follow(followerId: string, streamerId: string) {
-    const existing = await this.followRepo.findOneBy({
-      followerId,
-      streamerId,
-    });
-    if (existing) return existing;
-    const follow = this.followRepo.create({ followerId, streamerId });
-    return this.followRepo.save(follow);
-  }
-
-  async unfollow(followerId: string, streamerId: string) {
-    const existing = await this.followRepo.findOneBy({
-      followerId,
-      streamerId,
-    });
-    if (!existing) return null;
-    await this.followRepo.remove(existing);
-    return existing;
-  }
-
-  /* Donations */
-  async giveDonation(createDonationDto: Partial<DonationEntity>) {
-    const donation = this.donationRepo.create({
-      streamId: createDonationDto.streamId!,
-      userId: createDonationDto.userId!,
-      amountCents: createDonationDto.amountCents ?? 0,
-      currency: createDonationDto.currency ?? "USD",
-      message: createDonationDto.message ?? null,
-      status: createDonationDto.status ?? "completed",
-    });
-    return this.donationRepo.save(donation);
-  }
-
-  /* Subscriptions */
-  async subscribeToStreamer(
-    userId: string,
-    streamerId: string,
-    tierId: string,
-  ) {
-    // Optionally verify tier exists
-    const tier = await this.tierRepo.findOneBy({ id: tierId });
-    if (!tier) throw new Error("Subscription tier not found");
-
-    const existing = await this.subscriptionRepo.findOneBy({
-      userId,
-      streamerId,
-      tierId,
-    });
-    if (existing) return existing;
-
-    const sub = this.subscriptionRepo.create({ userId, streamerId, tierId });
-    return this.subscriptionRepo.save(sub);
   }
 }

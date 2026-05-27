@@ -26,6 +26,9 @@ export class UserEntity {
   @Column({ name: "is_admin", type: "boolean", default: false })
   isAdmin!: boolean;
 
+  @Column({ name: "is_streamer", type: "boolean", default: false })
+  isStreamer!: boolean;
+
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt!: Date;
 

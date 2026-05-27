@@ -9,10 +9,11 @@ import { CategoriesModule } from "./categories/categories.module";
 import { ChatModule } from "./chat/chat.module";
 import { DonationsModule } from "./donations/donations.module";
 import { StreamsModule } from "./streams/streams.module";
+import { StreamerModule } from "./streamer/streamer.module";
 import { UsersModule } from "./users/users.module";
 import { VodsModule } from "./vods/vods.module";
 import { AdminModule } from "./admin/admin.module";
-import { SubscriptionTiersModule } from "./subscription-tiers/subscription-tiers.module";
+import { SubscriptionsModule } from "./subscriptions/subscriptions.module";
 import { RedisModule } from "./redis/redis.module";
 import { NotificationsModule } from "./notifications/notifications.module";
 
@@ -39,8 +40,9 @@ const bullImports = process.env.REDIS_URL
     DonationsModule,
     NotificationsModule,
     StreamsModule,
+    StreamerModule,
     UsersModule,
-    SubscriptionTiersModule,
+    SubscriptionsModule,
     AdminModule,
     VodsModule,
     RedisModule,

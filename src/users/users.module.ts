@@ -6,7 +6,7 @@ import { UserEntity } from "./entities/user.entity";
 import { FollowEntity } from "../follows/entities/follow.entity";
 import { DonationEntity } from "../donations/entities/donation.entity";
 import { StreamSubscriptionEntity } from "../streams/entities/stream-subscription.entity";
-import { SubscriptionTierEntity } from "../subscription-tiers/entities/subscription-tier.entity";
+import { StreamerEntity } from "../streamer/entities/streamer.entity";
 
 @Module({
   imports: [
@@ -15,7 +15,7 @@ import { SubscriptionTierEntity } from "../subscription-tiers/entities/subscript
       FollowEntity,
       DonationEntity,
       StreamSubscriptionEntity,
-      SubscriptionTierEntity,
+      StreamerEntity,
     ]),
   ],
   controllers: [UsersController],
