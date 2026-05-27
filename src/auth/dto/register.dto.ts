@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty } from "@nestjs/swagger";
 
 export class RegisterDto {
   @ApiProperty({ example: "johndoe" })
@@ -9,7 +9,4 @@ export class RegisterDto {
 
   @ApiProperty({ example: "StrongPassword123!" })
   password!: string;
-
-  @ApiPropertyOptional({ example: "John Doe" })
-  name?: string;
 }

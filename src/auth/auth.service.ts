@@ -1,4 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { UsersService } from "../users/users.service";
@@ -45,18 +49,44 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
-    const passwordHash = await bcrypt.hash(registerDto.password, 10);
-    const user = await this.usersService.create({
-      username: registerDto.username,
-      email: registerDto.email,
-      passwordHash,
-      name: registerDto.name,
-    });
+    const username = registerDto?.username?.trim();
+    const email = registerDto?.email?.trim();
+    const password = registerDto?.password;
 
-    return {
-      message: "User registered successfully",
-      ...(await this.login(user)),
-    };
+    if (!username || !email || !password) {
+      throw new BadRequestException(
+        "username, email and password are required",
+      );
+    }
+
+    const [existingByEmail, existingByUsername] = await Promise.all([
+      this.usersService.findByEmail(email),
+      this.usersService.findByUsername(username),
+    ]);
+
+    if (existingByEmail) {
+      throw new ConflictException("User with this email already exists");
+    }
+
+    if (existingByUsername) {
+      throw new ConflictException("User with this username already exists");
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    try {
+      const user = await this.usersService.create({
+        username,
+        email,
+        passwordHash,
+      });
+
+      return {
+        message: "User registered successfully",
+        ...(await this.login(user)),
+      };
+    } catch {
+      throw new ConflictException("User already exists");
+    }
   }
 
   async verifyEmail(emailVerificationDto: EmailVerificationDto) {
