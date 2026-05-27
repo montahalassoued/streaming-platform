@@ -11,11 +11,7 @@ export class SubscriptionsController {
   @UseGuards(JwtAuthGuard)
   @Post()
   subscribe(@CurrentUser() user: any, @Body() dto: CreateSubscriptionDto) {
-    return this.svc.subscribeToStreamer(
-      user.id,
-      dto.streamerId,
-      dto.tierId ?? null,
-    );
+    return this.svc.subscribeToStreamer(user.id, dto.streamerId);
   }
 
   @UseGuards(JwtAuthGuard)

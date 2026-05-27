@@ -16,7 +16,6 @@ export class SubscriptionsService {
   async subscribeToStreamer(
     userId: string,
     streamerId: string,
-    tierId?: string | null,
   ) {
     // verify streamer exists (expecting streamerId to be streamer.userId or streamer.id)
     // try to find by id first, then by userId
@@ -27,24 +26,32 @@ export class SubscriptionsService {
       } as any);
     if (!streamer) throw new NotFoundException("Streamer not found");
 
-    // tierId is accepted but tiers table was removed; ignore validation
-
     const existing = await this.subscriptionRepo.findOne({
       where: { userId, streamerId },
     });
-    if (existing && existing.expiresAt && existing.expiresAt > new Date())
-      return existing;
 
     const now = new Date();
-    const expires = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const baseDate = existing?.expiresAt && existing.expiresAt > now ? existing.expiresAt : now;
+    const expires = this.addOneMonth(baseDate);
+
+    if (existing) {
+      existing.streamerId = streamer.id;
+      existing.expiresAt = expires;
+      return this.subscriptionRepo.save(existing);
+    }
 
     const sub = this.subscriptionRepo.create({
       userId,
       streamerId: streamer.id,
-      tierId: tierId ?? null,
       expiresAt: expires,
     } as any);
     return this.subscriptionRepo.save(sub);
+  }
+
+  private addOneMonth(date: Date) {
+    const next = new Date(date);
+    next.setMonth(next.getMonth() + 1);
+    return next;
   }
 
   async getUserSubscriptions(userId: string) {
