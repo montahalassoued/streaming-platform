@@ -1,4 +1,5 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
+import { DonationStatus } from "../entities/donation.entity";
 
 export class UpdateDonationDto {
   @ApiPropertyOptional({ example: "stream-id" })
@@ -17,5 +18,5 @@ export class UpdateDonationDto {
   message?: string;
 
   @ApiPropertyOptional({ example: "completed" })
-  status?: string;
+  status?: DonationStatus;
 }

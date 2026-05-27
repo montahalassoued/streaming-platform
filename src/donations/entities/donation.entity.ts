@@ -3,7 +3,10 @@ import {
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from "typeorm";
+
+export type DonationStatus = "pending" | "completed" | "failed" | "refunded";
 
 @Entity({ name: "donations" })
 export class DonationEntity {
@@ -28,9 +31,12 @@ export class DonationEntity {
   @Column({ name: "provider_payment_id", type: "varchar", nullable: true })
   providerPaymentId?: string | null;
 
-  @Column({ type: "varchar" })
-  status!: string;
+  @Column({ type: "varchar", default: "pending" })
+  status!: DonationStatus;
 
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt!: Date;
+
+  @UpdateDateColumn({ name: "updated_at", type: "timestamp" })
+  updatedAt!: Date;
 }

@@ -19,11 +19,9 @@ export class SubscriptionsService {
   ) {
     // verify streamer exists (expecting streamerId to be streamer.userId or streamer.id)
     // try to find by id first, then by userId
-    let streamer = await this.streamerRepo.findOneBy({ id: streamerId } as any);
+    let streamer = await this.streamerRepo.findOneBy({ id: streamerId });
     if (!streamer)
-      streamer = await this.streamerRepo.findOneBy({
-        userId: streamerId,
-      } as any);
+      streamer = await this.streamerRepo.findOneBy({ userId: streamerId });
     if (!streamer) throw new NotFoundException("Streamer not found");
 
     const existing = await this.subscriptionRepo.findOne({
@@ -44,7 +42,7 @@ export class SubscriptionsService {
       userId,
       streamerId: streamer.id,
       expiresAt: expires,
-    } as any);
+    });
     return this.subscriptionRepo.save(sub);
   }
 

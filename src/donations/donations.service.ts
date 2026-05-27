@@ -1,11 +1,11 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateDonationDto } from "./dto/create-donation.dto";
 import { UpdateDonationDto } from "./dto/update-donation.dto";
 import { DonationEntity } from "./entities/donation.entity";
-import { randomUUID } from "node:crypto";
-
+import { DonationWebhookDto } from "./dto/donation-webhook.dto";
+import { IPaymentProvider, PAYMENT_PROVIDER } from "./providers/payment-provider.interface";
 @Injectable()
 export class DonationsService {
   private readonly logger = new Logger(DonationsService.name);
@@ -13,6 +13,8 @@ export class DonationsService {
   constructor(
     @InjectRepository(DonationEntity)
     private readonly donationRepo: Repository<DonationEntity>,
+    @Inject(PAYMENT_PROVIDER)
+    private readonly paymentProvider: IPaymentProvider,
   ) {}
 
   async findAll() {
@@ -24,25 +26,27 @@ export class DonationsService {
   }
 
   async create(createDonationDto: CreateDonationDto) {
-    // Create a pending donation and return a simulated payment URL
-    const providerPaymentId = randomUUID();
-
     const donation = this.donationRepo.create({
       streamId: createDonationDto.streamId,
       userId: createDonationDto.userId,
       amountCents: createDonationDto.amountCents,
       currency: createDonationDto.currency,
       message: createDonationDto.message ?? null,
-      status: createDonationDto.status ?? "pending",
-      providerPaymentId,
+      status: "pending",
     });
 
     const saved = await this.donationRepo.save(donation);
 
-    // Simulate a redirect URL to an external payment page
-    const paymentUrl = `${process.env.PAYMENT_PROVIDER_BASE_URL ?? "https://payments.example"}/checkout/${providerPaymentId}`;
+    const { providerPaymentId, checkoutUrl } = await this.paymentProvider.createCheckout({
+      donationId: saved.id,
+      amountCents: saved.amountCents,
+      currency: saved.currency,
+    });
 
-    return { donation: saved, paymentUrl };
+    saved.providerPaymentId = providerPaymentId;
+    const updated = await this.donationRepo.save(saved);
+
+    return { donation: updated, paymentUrl: checkoutUrl };
   }
 
   async update(id: string, updateDonationDto: UpdateDonationDto) {
@@ -65,19 +69,21 @@ export class DonationsService {
   }
 
   // Webhook handler for payment provider
-  async handleWebhook(event: { providerPaymentId: string; status: string }) {
-    const { providerPaymentId, status } = event;
-    const donation = await this.donationRepo.findOneBy({ providerPaymentId });
+  async handleWebhook(dto: DonationWebhookDto) {
+    const donation = await this.donationRepo.findOneBy({ providerPaymentId: dto.providerPaymentId });
     if (!donation) {
-      this.logger.warn(`Webhook for unknown payment id ${providerPaymentId}`);
+      this.logger.warn(`Webhook for unknown providerPaymentId: ${dto.providerPaymentId}`);
       return null;
     }
 
-    donation.status = status;
-    const saved = await this.donationRepo.save(donation);
+    const newStatus = this.paymentProvider.mapEventToStatus(dto.event);
+    if (!newStatus) {
+      this.logger.warn(`Unrecognised provider event: ${dto.event}`);
+      return null;
+    }
 
-
-    return saved;
+    donation.status = newStatus;
+    return this.donationRepo.save(donation);
   }
   async giveDonation(createDonationDto: Partial<DonationEntity>) {
     const donation = this.donationRepo.create({

@@ -3,19 +3,27 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
+  Inject,
   Param,
   Patch,
   Post,
   Req,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { Request } from "express";
 import { DonationsService } from "./donations.service";
 import { CreateDonationDto } from "./dto/create-donation.dto";
 import { UpdateDonationDto } from "./dto/update-donation.dto";
+import { DonationWebhookDto } from "./dto/donation-webhook.dto";
+import { IPaymentProvider, PAYMENT_PROVIDER } from "./providers/payment-provider.interface";
 
 @Controller("donations")
 export class DonationsController {
-  constructor(private readonly donationsService: DonationsService) {}
+  constructor(
+    private readonly donationsService: DonationsService,
+    @Inject(PAYMENT_PROVIDER) private readonly paymentProvider: IPaymentProvider,
+  ) {}
 
   @Get()
   findAll() {
@@ -33,15 +41,16 @@ export class DonationsController {
   }
 
   @Post("/webhook")
-  async webhook(@Body() body: any, @Req() req: Request) {
-    const signature = req.headers["x-pay-signature"] as string | undefined;
-    const secret = process.env.PAYMENT_WEBHOOK_SECRET;
-    if (secret && signature !== secret) {
-      return { ok: false, message: "invalid signature" };
-    }
+  async webhook(
+    @Body() dto: DonationWebhookDto,
+    @Req() req: Request,
+    @Headers('x-pay-signature') signature?: string,
+  ) {
+    const rawBody = (req as any).rawBody?.toString() ?? JSON.stringify(dto);
+    const valid = this.paymentProvider.verifyWebhookSignature(rawBody, signature ?? "");
+    if (!valid) throw new UnauthorizedException('Invalid webhook signature');
 
-    const { providerPaymentId, status } = body;
-    const result = await this.donationsService.handleWebhook({ providerPaymentId, status });
+    const result = await this.donationsService.handleWebhook(dto);
     return { ok: true, result };
   }
 
