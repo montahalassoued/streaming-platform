@@ -2,8 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { StreamEntity } from "../../streams/entities/stream.entity";
 
 @Entity({ name: "vods" })
 export class VodEntity {
@@ -12,6 +15,10 @@ export class VodEntity {
 
   @Column({ name: "stream_id", type: "uuid" })
   streamId!: string;
+
+  @ManyToOne(() => StreamEntity, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "stream_id" })
+  stream?: StreamEntity;
 
   @Column({ type: "varchar" })
   title!: string;
