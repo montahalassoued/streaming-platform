@@ -1,5 +1,6 @@
 import {
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   Index,
   JoinColumn,
@@ -27,4 +28,7 @@ export class FollowEntity {
 
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt!: Date;
+
+  @DeleteDateColumn({ name: "deleted_at", type: "timestamp", nullable: true })
+  deletedAt?: Date | null;
 }
