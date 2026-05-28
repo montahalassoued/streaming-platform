@@ -10,6 +10,10 @@ import { UpdateChatMessageDto } from "./dto/update-chat-message.dto";
 import { ChatMessageEntity } from "./entities/chat-message.entity";
 import { UserEntity } from "../users/entities/user.entity";
 
+export type ChatMessageWithUser = Omit<ChatMessageEntity, "user"> & {
+  user?: { id: string; username: string } | null;
+};
+
 @Injectable()
 export class ChatService {
   constructor(
@@ -27,8 +31,22 @@ export class ChatService {
     return this.chatRepository.findOneBy({ id });
   }
 
-  findByStreamId(streamId: string) {
-    return this.chatRepository.findBy({ streamId });
+  async findByStreamId(streamId: string): Promise<ChatMessageWithUser[]> {
+    const messages = await this.chatRepository.find({
+      where: { streamId },
+      relations: { user: true },
+      order: { createdAt: "ASC" },
+    });
+
+    return messages.map((message) => ({
+      ...message,
+      user: message.user
+        ? {
+            id: message.user.id,
+            username: message.user.username,
+          }
+        : null,
+    }));
   }
 
   async create(createChatMessageDto: CreateChatMessageDto) {

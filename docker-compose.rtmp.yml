@@ -1,0 +1,14 @@
+version: "3.7"
+services:
+  nginx-rtmp:
+    image: alfg/nginx-rtmp:latest
+    container_name: streaming-nginx-rtmp
+    restart: unless-stopped
+    ports:
+      - "1935:1935"
+      - "8081:80"
+    volumes:
+      - ./docker/nginx-rtmp.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/hls:/var/www/hls
+    environment:
+      - TZ=UTC

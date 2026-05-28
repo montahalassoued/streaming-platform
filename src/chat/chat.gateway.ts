@@ -14,6 +14,7 @@ import { RedisService } from "../redis/redis.service";
 import { StreamsService } from "../streams/streams.service";
 import { Server, Socket } from "socket.io";
 import { ChatService } from "./chat.service";
+import { ChatMessageWithUser } from "./chat.service";
 import { JoinStreamDto } from "./dto/join-stream.dto";
 import { LeaveStreamDto } from "./dto/leave-stream.dto";
 import { SendChatMessageDto } from "./dto/send-chat-message.dto";
@@ -165,7 +166,7 @@ export class ChatGateway
     client.join(room);
     client.data.streamId = payload.streamId;
 
-    const messages = this.chatService.findByStreamId(payload.streamId);
+    const messages = await this.chatService.findByStreamId(payload.streamId);
     const viewerCount = this.redisService.incrementViewerCount(
       payload.streamId,
     );
