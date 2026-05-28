@@ -16,7 +16,7 @@ export class VodEntity {
   @Column({ name: "stream_id", type: "uuid" })
   streamId!: string;
 
-  @ManyToOne(() => StreamEntity, { onDelete: "CASCADE" })
+  @ManyToOne(() => StreamEntity, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "stream_id" })
   stream?: StreamEntity;
 

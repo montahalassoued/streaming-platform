@@ -12,12 +12,6 @@ export interface ValidatedUser {
   isAdmin: boolean;
 }
 
-export interface RequestWithCookies {
-  cookies?: {
-    access_token?: string;
-  };
-}
-
 export interface RequestWithUser {
   user: ValidatedUser;
 }

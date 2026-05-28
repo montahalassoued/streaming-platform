@@ -1,4 +1,4 @@
-import { Controller, Get, Req, Res, UseGuards, UnauthorizedException } from "@nestjs/common";
+import { Controller, Sse, Req, Res, UseGuards, UnauthorizedException } from "@nestjs/common";
 import { NotificationsService } from "./notifications.service";
 import { Request, Response } from "express";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
@@ -9,7 +9,7 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Get("sse")
+  @Sse("sse")
   subscribe(@Req() req: Request & RequestWithUser, @Res() res: Response) {
     const user = req.user;
     if (!user) throw new UnauthorizedException();

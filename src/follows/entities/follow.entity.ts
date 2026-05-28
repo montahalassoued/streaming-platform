@@ -18,11 +18,11 @@ export class FollowEntity {
   @PrimaryColumn({ name: "streamer_id", type: "uuid" })
   streamerId!: string;
 
-  @ManyToOne(() => UserEntity, { onDelete: "CASCADE" })
+  @ManyToOne(() => UserEntity, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "follower_id" })
   follower?: UserEntity;
 
-  @ManyToOne(() => UserEntity, { onDelete: "CASCADE" })
+  @ManyToOne(() => UserEntity, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "streamer_id" })
   streamer?: UserEntity;
 

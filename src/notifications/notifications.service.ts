@@ -17,7 +17,7 @@ interface StreamWentLivePayload {
   startedAt: string;
 }
 
-// 25 s keeps connections alive through most proxy/load-balancer idle timeouts.
+
 const SSE_HEARTBEAT_MS = 25_000;
 
 @Injectable()
@@ -71,13 +71,6 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
           );
         }
       });
-
-      // streamer.settings.updated — intentional no-op.
-      // The payload only carries { streamerId }, which cannot be directly mapped to a
-      // connected SSE client (clients are keyed by userId). Pushing a meaningful update
-      // requires a DB lookup and a defined frontend contract for what UI should refresh.
-      // The consumer is wired so the event is acknowledged; implement the push once the
-      // frontend team specifies the expected reaction.
       void this.redisService.subscribe(
         "streamer.settings.updated",
         (payload) => {

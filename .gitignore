@@ -4,3 +4,4 @@ dist
 tsconfig.build.tsbuildinfo
 resources/
 dist/
+\docs

@@ -17,14 +17,14 @@ export class ChatMessageEntity {
   @Column({ name: "stream_id", type: "uuid" })
   streamId!: string;
 
-  @ManyToOne(() => StreamEntity, { onDelete: "CASCADE" })
+  @ManyToOne(() => StreamEntity, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "stream_id" })
   stream?: StreamEntity;
 
   @Column({ name: "user_id", type: "uuid" })
   userId!: string;
 
-  @ManyToOne(() => UserEntity, { onDelete: "CASCADE" })
+  @ManyToOne(() => UserEntity, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "user_id" })
   user?: UserEntity;
 

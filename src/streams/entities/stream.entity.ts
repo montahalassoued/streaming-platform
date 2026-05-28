@@ -17,7 +17,7 @@ export class StreamEntity {
   @Column({ name: "streamer_id", type: "uuid" })
   streamerId!: string;
 
-  @ManyToOne(() => StreamerEntity, { onDelete: "CASCADE" })
+  @ManyToOne(() => StreamerEntity, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "streamer_id" })
   streamer?: StreamerEntity;
 

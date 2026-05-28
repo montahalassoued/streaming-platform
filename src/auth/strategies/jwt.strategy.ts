@@ -3,7 +3,6 @@ import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import {
   JwtPayload,
-  RequestWithCookies,
   ValidatedUser,
 } from "../../common/types/auth.types";
 
@@ -11,7 +10,7 @@ import {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      // Only accept JWTs from the Authorization: Bearer <token> header for stricter SSE usage
+      // Only accept JWTs from the Authorization: Bearer <token> header
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_SECRET ?? "dev-secret",
