@@ -13,7 +13,7 @@ NestJS backend for a streaming platform with TypeORM, PostgreSQL, auth, admin, s
 
 ## ERD
 
-![Schema ERD](assets\schema_erd_revised_v2.svg)
+![Schema ERD](assets/schema_erd_revised_v2.svg)
 
 ## Requirements
 
@@ -114,3 +114,6 @@ See `docs/NOTIFICATIONS.md` for event payload schemas and examples for subscribi
 ## Architecture Diagram
 
 See `docs/ARCHITECTURE.md` for a brief diagram and explanation of the realtime flow.
+
+
+
