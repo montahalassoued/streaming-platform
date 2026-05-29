@@ -32,13 +32,7 @@ npm install
 
 2. Create a `.env` file with your Neon database and auth values:
 
-```env
-DATABASE_URL=your-neon-connection-string
-JWT_SECRET=your-secret-key
-REDIS_URL=redis://localhost:6379
-FRONTEND_URL=http://localhost:8083
-PORT=3000
-```
+
 
 3. Run the build or start command you want:
 
