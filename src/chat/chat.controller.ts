@@ -84,7 +84,6 @@ export class ChatController {
 
   @Delete(":id")
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: "Moderate (soft-delete) a chat message" })
   @ApiResponse({ status: 200, description: "Message moderated" })
   @ApiResponse({ status: 403, description: "Not the author or admin" })

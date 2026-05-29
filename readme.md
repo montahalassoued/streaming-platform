@@ -20,6 +20,7 @@ NestJS backend for a streaming platform with TypeORM, PostgreSQL, auth, admin, s
 - Node.js 18+
 - npm
 - Neon PostgreSQL database
+- Redis
 
 ## Setup
 
@@ -34,6 +35,8 @@ npm install
 ```env
 DATABASE_URL=your-neon-connection-string
 JWT_SECRET=your-secret-key
+REDIS_URL=redis://localhost:6379
+FRONTEND_URL=http://localhost:8083
 PORT=3000
 ```
 
@@ -47,6 +50,12 @@ npm run build
 
 ```bash
 npm run start:dev
+```
+
+5. Open the API docs:
+
+```text
+http://localhost:3000/api
 ```
 
 ## Scripts
@@ -71,15 +80,21 @@ http://localhost:3000/api
 
 ## Docker
 
-Build and run the API against Neon:
+Build and run the API with Redis:
 
 ```bash
 docker compose up --build
 ```
 
-The app will be available at `http://localhost:3000` and will use the `DATABASE_URL` from your `.env` file.
+The app will be available at `http://localhost:3000` and will use the values from your `.env` file.
 
 You can override the runtime with environment variables such as `DATABASE_URL`, `JWT_SECRET`, and `PORT`.
+
+If you also need the RTMP media stack:
+
+```bash
+docker compose -f docker-compose.rtmp.yml up --build
+```
 
 ## Project Structure
 
@@ -107,6 +122,20 @@ Key notes:
 - Modules are decoupled using Redis pub/sub to avoid circular NestJS DI.
 - Follower notifications are stored in the `follows` table and SSE pushes are filtered to followers only.
 
+## Authentication
+
+Use the JWT access token as a bearer token:
+
+```text
+Authorization: Bearer <accessToken>
+```
+
+Use the access token for protected REST routes and for `GET /notifications/sse`.
+
+Use the refresh token only with `POST /auth/refresh`.
+
+For Socket.IO chat, send the access token in `socket.handshake.auth.token` or the `Authorization` header.
+
 ## Notifications & Events
 
 See `docs/NOTIFICATIONS.md` for event payload schemas and examples for subscribing via SSE and connecting to WebSocket chat.
@@ -114,6 +143,3 @@ See `docs/NOTIFICATIONS.md` for event payload schemas and examples for subscribi
 ## Architecture Diagram
 
 See `docs/ARCHITECTURE.md` for a brief diagram and explanation of the realtime flow.
-
-
-

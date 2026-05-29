@@ -13,12 +13,14 @@ async function bootstrap() {
     .setTitle("Streaming Platform API")
     .setDescription("API documentation for the streaming platform")
     .setVersion("1.0")
+    .addBearerAuth({ type: "http", scheme: "bearer", bearerFormat: "JWT" }, "bearer-auth")
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api", app, document);
+  SwaggerModule.setup("api", app, document, { swaggerOptions: { persistAuthorization: true } });
 
-  await app.listen(3000);
+  const port = Number(process.env.PORT ?? 3000);
+  await app.listen(port);
 }
 
 void bootstrap();

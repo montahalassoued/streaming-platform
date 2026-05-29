@@ -1,15 +1,19 @@
 import { Controller, Sse, Req, Res, UseGuards, UnauthorizedException } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { NotificationsService } from "./notifications.service";
 import { Request, Response } from "express";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RequestWithUser } from "../common/types/auth.types";
 
+@ApiTags("notifications")
 @Controller("notifications")
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @UseGuards(JwtAuthGuard)
   @Sse("sse")
+  @ApiOperation({ summary: "Subscribe to server-sent notifications (SSE)" })
+  @ApiResponse({ status: 200, description: "SSE stream established" })
   subscribe(@Req() req: Request & RequestWithUser, @Res() res: Response) {
     const user = req.user;
     if (!user) throw new UnauthorizedException();

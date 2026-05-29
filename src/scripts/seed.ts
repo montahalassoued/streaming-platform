@@ -6,6 +6,7 @@ import { StreamEntity } from "../streams/entities/stream.entity";
 import { VodEntity } from "../vods/entities/vod.entity";
 import { ChatMessageEntity } from "../chat/entities/chat-message.entity";
 import { DonationEntity } from "../donations/entities/donation.entity";
+import { FollowEntity } from "../follows/entities/follow.entity";
 import { VodViewEntity } from "../vods/entities/vod-view.entity";
 import * as bcrypt from "bcrypt";
 import { randomUUID } from "node:crypto";
@@ -36,6 +37,7 @@ async function run() {
     const vodRepo = ds.getRepository(VodEntity);
     const chatRepo = ds.getRepository(ChatMessageEntity);
     const donationRepo = ds.getRepository(DonationEntity);
+    const followRepo = ds.getRepository(FollowEntity);
     const vodViewRepo = ds.getRepository(VodViewEntity);
 
     // Users
@@ -107,6 +109,18 @@ async function run() {
       },
     );
 
+    // Demo user Montaha (follower)
+    const montahaHash = await bcrypt.hash("montahapass", 10);
+    const montaha = await findOrCreate(
+      userRepo,
+      { email: "montaha@example.com" },
+      {
+        username: "montaha",
+        email: "montaha@example.com",
+        passwordHash: montahaHash,
+      },
+    );
+
     // Streamers
     const aliceStreamer = await findOrCreate(
       streamerRepo,
@@ -118,6 +132,10 @@ async function run() {
         isVerified: true,
       },
     );
+    // mark user as streamer
+    try {
+      await userRepo.update({ id: alice.id }, { isStreamer: true });
+    } catch {}
 
     const bobStreamer = await findOrCreate(
       streamerRepo,
@@ -129,6 +147,9 @@ async function run() {
         isVerified: false,
       },
     );
+    try {
+      await userRepo.update({ id: bob.id }, { isStreamer: true });
+    } catch {}
 
     // Categories
     const gaming = await findOrCreate(
@@ -211,6 +232,9 @@ async function run() {
         isVerified: false,
       },
     );
+    try {
+      await userRepo.update({ id: charlie.id }, { isStreamer: true });
+    } catch {}
 
     const dianaStreamer = await findOrCreate(
       streamerRepo,
@@ -222,6 +246,9 @@ async function run() {
         isVerified: true,
       },
     );
+    try {
+      await userRepo.update({ id: diana.id }, { isStreamer: true });
+    } catch {}
 
     const elenaStreamer = await findOrCreate(
       streamerRepo,
@@ -233,6 +260,9 @@ async function run() {
         isVerified: true,
       },
     );
+    try {
+      await userRepo.update({ id: elena.id }, { isStreamer: true });
+    } catch {}
 
     const charlieStream = await findOrCreate(
       streamRepo,
@@ -412,6 +442,20 @@ async function run() {
       },
     );
 
+    // Make montaha follow Alice (demo relationship)
+    try {
+      await findOrCreate(
+        followRepo,
+        { followerId: montaha.id, streamerId: alice.id },
+        {
+          followerId: montaha.id,
+          streamerId: alice.id,
+        },
+      );
+    } catch (e) {
+      // ignore
+    }
+
     // Donations
     await findOrCreate(
       donationRepo,
@@ -423,6 +467,31 @@ async function run() {
         currency: "USD",
         message: "Great stream!",
         status: "completed",
+      },
+    );
+
+    // Demo donation from montaha to Alice (shows up in Streamer donations)
+    await findOrCreate(
+      donationRepo,
+      { userId: montaha.id, amountCents: 2000 },
+      {
+        streamId: aliceStream.id,
+        userId: montaha.id,
+        amountCents: 2000,
+        currency: "USD",
+        message: "Demo donation for Alice",
+        status: "completed",
+      },
+    );
+
+    // Chat message announcing the demo donation
+    await findOrCreate(
+      chatRepo,
+      { content: "montaha donated $20 to Alice", userId: montaha.id },
+      {
+        streamId: aliceStream.id,
+        userId: montaha.id,
+        content: "montaha donated $20 to Alice",
       },
     );
 

@@ -74,14 +74,6 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return 0;
   }
 
-  async setJson<T>(key: string, value: T) {
-    if (!this.client) {
-      return;
-    }
-
-    await this.client.set(key, JSON.stringify(value));
-  }
-
   async publish(channel: string, payload: unknown) {
     if (!this.client) return;
     try {
@@ -137,16 +129,6 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       }
     };
   }
-
-  async getJson<T>(key: string): Promise<T | null> {
-    if (!this.client) {
-      return null;
-    }
-
-    const value = await this.client.get(key);
-    return value ? (JSON.parse(value) as T) : null;
-  }
-
   private viewerCountKey(streamId: string) {
     return `stream:viewers:${streamId}`;
   }

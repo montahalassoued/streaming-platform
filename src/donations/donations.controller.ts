@@ -11,6 +11,7 @@ import {
   Req,
   UnauthorizedException,
 } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { Request } from "express";
 import { DonationsService } from "./donations.service";
 import { CreateDonationDto } from "./dto/create-donation.dto";
@@ -18,6 +19,7 @@ import { UpdateDonationDto } from "./dto/update-donation.dto";
 import { DonationWebhookDto } from "./dto/donation-webhook.dto";
 import { IPaymentProvider, PAYMENT_PROVIDER } from "./providers/payment-provider.interface";
 
+@ApiTags("donations")
 @Controller("donations")
 export class DonationsController {
   constructor(
@@ -36,6 +38,8 @@ export class DonationsController {
   }
 
   @Post()
+  @ApiOperation({ summary: "Create a donation (initiates checkout)" })
+  @ApiResponse({ status: 200, description: "Donation created and checkout URL returned" })
   create(@Body() createDonationDto: CreateDonationDto) {
     return this.donationsService.create(createDonationDto);
   }
